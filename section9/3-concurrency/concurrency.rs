@@ -1,42 +1,36 @@
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-fn make_large_vector() -> Vec<i32> {
-    let mut v = vec![];
-    for i in 0..5000 {
-        v.push(i - 300);
-    }
-    v
-}
+const NUM_THREADS: i32 = 10;
+const DEPOSITS_PER_THREAD: i32 = 5000;
+const DEPOSIT_SIZE: i32 = 100;
+
+const EXPECTED_TOTAL: i32 = NUM_THREADS * DEPOSITS_PER_THREAD * DEPOSIT_SIZE;
 
 fn update_account(balance: &Mutex<i32>) {
-    for i in 0..5000 {
-        let mut requests_guard = requests.lock().unwrap();
-        if requests_guard.is_empty() {
-            return;
-        }
-        let current_request = requests_guard.get(0).unwrap().clone();
-        requests_guard.remove(0);
-        drop(requests_guard);
-        
-        *balance += current_request;
+    for _ in 0..DEPOSITS_PER_THREAD {
+        *balance += DEPOSIT_SIZE;
     }
 }
 
 fn main() {
-    let balance = Arc::new(Mutex::new(300));
-    let requests = Arc::new(Mutex::new(make_large_vector()));
+    let balance = Arc::new(Mutex::new(0));
 
+    // Spawn threads to all update the account balance at once
     let mut workers = vec![];
-    for _ in 0..6 {
+    for _ in 0..NUM_THREADS {
         let balance_ref = balance.clone();
-        let requests_ref = requests.clone();
-        workers.push(thread::spawn(move || update_account(&*balance_ref, &*requests_ref)));
+        workers.push(thread::spawn(move || update_account(&*balance_ref)));
     }
 
+    // Join all of the threads
     for worker in workers {
         worker.join().unwrap();
     }
 
-    println!("Final balance = {:?}", *balance.lock().unwrap());
+    // Print out the final balance and check that it's what we'd expect!
+    let final_balance = *balance.lock().unwrap();
+    println!("Final balance = {}", final_balance);
+    println!("Expected final balance = {}", EXPECTED_TOTAL);
+    assert_eq!(final_balance, EXPECTED_TOTAL);
 }

@@ -2,43 +2,37 @@
 #include <mutex>
 #include <vector>
 #include <iostream>
+#include <cassert>
 
-std::vector<int> make_large_vector() {
-    std::vector<int> v;
-    for (int i = 0; i < 5000; i++) {
-        v.push_back(i - 300);
-    }
-    return v;
-}
+int NUM_THREADS = 10;
+int DEPOSITS_PER_THREAD = 5000;
+int DEPOSIT_SIZE = 100;
 
-void update_account(int* balance, std::vector<int>* requests, std::mutex* requests_mtx) {
-    while (true) {
-        requests_mtx->lock();
-        if (requests->empty()) {
-            requests_mtx->unlock();
-            return;
-        }
-        int current_request = requests->at(0);
-        requests->erase(requests->begin());
-        requests_mtx->unlock();
+int EXPECTED_TOTAL = NUM_THREADS * DEPOSITS_PER_THREAD * DEPOSIT_SIZE;
 
-        *balance += current_request;
+void update_account(int* balance, std::mutex* balance_mutex) {
+    for (int i = 0; i < DEPOSITS_PER_THREAD; i++) {
+        *balance += DEPOSIT_SIZE;
     }
 }
 
 int main() {
-    int balance = 300;
-    std::vector<int> requests = make_large_vector();
-    std::mutex requests_mtx;
+    int balance = 0;
 
+    // Spawn threads to all update the account balance at once
     std::vector<std::thread> workers;
-    for (int i = 0; i < 6; i++) {
-        workers.push_back(std::thread(update_account, &balance, &requests, &requests_mtx));
+    std::mutex balance_mtx;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        workers.push_back(std::thread(update_account, &balance, &balance_mtx));
     }
-    for (int i = 0; i < 6; i++) {
+
+    // Join all of the threads
+    for (int i = 0; i < NUM_THREADS; i++) {
         workers.at(i).join();
     }
 
+    // Print out the final balance and check that it's what we'd expect!
     std::cout << "Final balance = " << balance << std::endl;
-    return 0;
+    std::cout << "Expected final balance = " << EXPECTED_TOTAL << std::endl;
+    assert(balance == EXPECTED_TOTAL);
 }

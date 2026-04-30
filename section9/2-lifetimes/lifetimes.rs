@@ -20,7 +20,6 @@ fn make_two_elt_list<'a>(first_value: i32) -> List<'a> {
 
 #[allow(unused_variables)]
 fn main() {
-
     let my_list = make_two_elt_list(1);
     println!("First list element: {}", my_list.val);
     println!("Second list element: {}", my_list.next.unwrap().val);
