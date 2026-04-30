@@ -8,7 +8,7 @@ BLACK=\033[0m
 
 # Flags to be passed to the C++ compiler.
 CPPFLAGS	 += -std=c++17 -Wall -Wextra -g
-THREADFLAGS	 += -O3 -pthread 
+THREADFLAGS	 += -O0 -pthread 
 
 all: cpp rust
 
