@@ -6,17 +6,17 @@ typedef struct list {
   struct list *next;
 } list_t;
 
-list_t make_list(int *starting_value) {
-  list_t list_node_2 = {*starting_value + 1, NULL};
+// Makes a list with the first element `first_value`, and the second element `first_value + 1`
+list_t make_two_elt_list(int starting_value) {
+  list_t list_node_2 = {starting_value + 1, NULL};
 
-  list_t list_node_1 = {*starting_value, &list_node_2};
+  list_t list_node_1 = {starting_value, &list_node_2};
 
   return list_node_1;
 }
 
 int main() {
-  int val = 1;
-  list_t l = make_list(&val);
-  printf("First list element: %d\n", l.val);
-  printf("Second list element: %d\n", l.next->val);
+  list_t my_list = make_two_elt_list(1);
+  printf("First list element: %d\n", my_list.val);
+  printf("Second list element: %d\n", my_list.next->val);
 }
